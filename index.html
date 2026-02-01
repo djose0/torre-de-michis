@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Torre de Michis 🐱</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Quicksand:wght@300;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #a8dadc 0%, #457b9d 100%);
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        #game-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            touch-action: none;
+        }
+        
+        #ui-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Fredoka', sans-serif;
+            font-size: 48px;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+        
+        #mute-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            transition: all 0.3s ease;
+            pointer-events: all;
+            z-index: 1000;
+        }
+        
+        #mute-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+        
+        #mute-btn:active {
+            transform: scale(0.95);
+        }
+        
+        #start-screen, #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            pointer-events: all;
+        }
+        
+        #game-over-screen {
+            display: none;
+        }
+        
+        .screen-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 64px;
+            font-weight: 600;
+            color: #ff8a65;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .subtitle {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 40px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .btn {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 24px;
+            padding: 18px 48px;
+            background: linear-gradient(135deg, #ff8a65, #ff6f61);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(255, 111, 97, 0.4);
+            transition: all 0.3s ease;
+            pointer-events: all;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(255, 111, 97, 0.5);
+        }
+        
+        .btn:active {
+            transform: translateY(0px);
+        }
+        
+        #final-score {
+            font-size: 80px;
+            color: #ff8a65;
+            margin: 20px 0;
+            font-family: 'Fredoka', sans-serif;
+        }
+        
+        .emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            color: #666;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            animation: pulse 2s ease-in-out infinite;
+            display: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .screen-title {
+                font-size: 48px;
+            }
+            #score {
+                font-size: 36px;
+            }
+            #final-score {
+                font-size: 64px;
+            }
+            #mute-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+                top: 15px;
+                right: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="game-canvas"></canvas>
+    
+    <div id="ui-container">
+        <div id="score">0</div>
+        <button id="mute-btn" title="Silenciar música">🔊</button>
+        
+        <div id="start-screen">
+            <div class="emoji">🐱</div>
+            <div class="screen-title">Torre de Michis</div>
+            <div class="subtitle">Apila gatitos lo más alto que puedas</div>
+            <button class="btn" id="start-btn">Comenzar</button>
+        </div>
+        
+        <div id="game-over-screen">
+            <div class="emoji">😿</div>
+            <div class="screen-title">¡Gatástrofe!</div>
+            <div id="final-score">0</div>
+            <div class="subtitle">michis apilados</div>
+            <div id="record-message" style="display: none; font-size: 24px; color: #ffd93d; font-weight: 600; margin: 10px 0; animation: bounce 1s ease-in-out infinite;">
+                🎉 ¡NUEVO RÉCORD! 🎉
+            </div>
+            <div style="font-size: 18px; color: #666; margin-top: 10px;">
+                Tu récord: <span id="high-score" style="color: #ff8a65; font-weight: 600; font-size: 24px;">0</span> michis
+            </div>
+            <button class="btn" id="restart-btn" style="margin-top: 30px;">Jugar de nuevo</button>
+        </div>
+        
+        <div id="instructions">👆 Toca para apilar</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ==================== AUDIO ENGINE ====================
+        class AudioEngine {
+            constructor() {
+                this.audioContext = null;
+                this.masterGain = null;
+                this.musicGain = null;
+                this.sfxGain = null;
+                this.musicOscillators = [];
+                this.isPlaying = false;
+            }
+            
+            init() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.masterGain = this.audioContext.createGain();
+                this.masterGain.connect(this.audioContext.destination);
+                this.masterGain.gain.value = 0.3;
+                
+                this.musicGain = this.audioContext.createGain();
+                this.musicGain.connect(this.masterGain);
+                this.musicGain.gain.value = 0.15;
+                
+                this.sfxGain = this.audioContext.createGain();
+                this.sfxGain.connect(this.masterGain);
+                this.sfxGain.gain.value = 0.2;
+            }
+            
+            startMusic() {
+                if (this.isPlaying) return;
+                this.isPlaying = true;
+                
+                // Melodía Lo-fi más relajante y suave con acordes ambientales
+                const melody = [
+                    { freq: 329.63, time: 0, duration: 2 },      // E4
+                    { freq: 392.00, time: 2, duration: 2 },      // G4
+                    { freq: 440.00, time: 4, duration: 2 },      // A4
+                    { freq: 493.88, time: 6, duration: 2 },      // B4
+                    { freq: 523.25, time: 8, duration: 2 },      // C5
+                    { freq: 493.88, time: 10, duration: 2 },     // B4
+                    { freq: 440.00, time: 12, duration: 2 },     // A4
+                    { freq: 392.00, time: 14, duration: 2 },     // G4
+                ];
+                
+                const bass = [
+                    { freq: 130.81, time: 0, duration: 4 },      // C3
+                    { freq: 146.83, time: 4, duration: 4 },      // D3
+                    { freq: 110.00, time: 8, duration: 4 },      // A2
+                    { freq: 123.47, time: 12, duration: 4 },     // B2
+                ];
+                
+                const ambient = [
+                    { freq: 261.63, time: 0, duration: 8 },      // C4
+                    { freq: 293.66, time: 8, duration: 8 },      // D4
+                ];
+                
+                const playSequence = (sequence, wave = 'sine', volume = 0.3) => {
+                    sequence.forEach(note => {
+                        setTimeout(() => {
+                            if (!this.isPlaying) return;
+                            
+                            const osc = this.audioContext.createOscillator();
+                            const gain = this.audioContext.createGain();
+                            
+                            osc.type = wave;
+                            osc.frequency.value = note.freq;
+                            
+                            gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                            gain.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 0.2);
+                            gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + note.duration);
+                            
+                            osc.connect(gain);
+                            gain.connect(this.musicGain);
+                            
+                            osc.start();
+                            osc.stop(this.audioContext.currentTime + note.duration);
+                            
+                            this.musicOscillators.push(osc);
+                        }, note.time * 1000);
+                    });
+                };
+                
+                const loop = () => {
+                    if (!this.isPlaying) return;
+                    playSequence(melody, 'sine', 0.25);
+                    playSequence(bass, 'triangle', 0.2);
+                    playSequence(ambient, 'sine', 0.1);
+                    setTimeout(loop, 16000);
+                };
+                
+                loop();
+            }
+            
+            stopMusic() {
+                this.isPlaying = false;
+                this.musicOscillators.forEach(osc => {
+                    try { osc.stop(); } catch(e) {}
+                });
+                this.musicOscillators = [];
+            }
+            
+            playPlaceSound(pitch = 1) {
+                const now = this.audioContext.currentTime;
+                
+                // Acorde suave arpegiado con más notas
+                const frequencies = [
+                    523 * pitch,   // C
+                    659 * pitch,   // E
+                    784 * pitch,   // G
+                    1047 * pitch   // C alta
+                ];
+                
+                frequencies.forEach((freq, i) => {
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    
+                    const startTime = now + i * 0.03;
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.linearRampToValueAtTime(0.2, startTime + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.sfxGain);
+                    
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.4);
+                });
+            }
+            
+            playCutSound() {
+                const now = this.audioContext.currentTime;
+                
+                // Sonido de "swish" cuando se corta
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+                
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                
+                osc.connect(gain);
+                gain.connect(this.sfxGain);
+                
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+            
+            playGameOverSound() {
+                const now = this.audioContext.currentTime;
+                const frequencies = [392, 349, 294, 262]; // G-F-D-C descendente
+                
+                frequencies.forEach((freq, i) => {
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    
+                    const startTime = now + i * 0.2;
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.linearRampToValueAtTime(0.2, startTime + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.sfxGain);
+                    
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.4);
+                });
+            }
+        }
+        
+        // ==================== JUEGO PRINCIPAL ====================
+        class TorreDeMichis {
+            constructor() {
+                this.canvas = document.getElementById('game-canvas');
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(
+                    45,
+                    window.innerWidth / window.innerHeight,
+                    0.1,
+                    1000
+                );
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: this.canvas, 
+                    antialias: true,
+                    alpha: false 
+                });
+                
+                this.audioEngine = new AudioEngine();
+                this.stack = [];
+                this.currentBlock = null;
+                this.score = 0;
+                this.gameState = 'menu'; // menu, playing, gameOver
+                this.direction = 1;
+                this.speed = 0.05;
+                this.cameraTargetY = 10;
+                this.fallingBlocks = [];
+                this.highScore = parseInt(localStorage.getItem('torredeMichisHighScore')) || 0;
+                this.isMuted = false;
+                
+                this.catColors = [
+                    0xff6b35, // Naranja vibrante
+                    0xf4a261, // Durazno
+                    0x2a9d8f, // Verde azulado
+                    0xe76f51, // Coral
+                    0x8338ec, // Morado
+                    0x06ffa5, // Verde menta
+                ];
+                
+                this.init();
+                this.setupEventListeners();
+            }
+            
+            init() {
+                // Renderer
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                this.renderer.setClearColor(0x87ceeb); // Azul cielo suave
+                
+                // Camera
+                this.camera.position.set(8, 10, 12);
+                this.camera.lookAt(0, 0, 0);
+                
+                // Luces
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xfff5e1, 0.8);
+                directionalLight.position.set(10, 20, 10);
+                directionalLight.castShadow = true;
+                directionalLight.shadow.camera.left = -20;
+                directionalLight.shadow.camera.right = 20;
+                directionalLight.shadow.camera.top = 20;
+                directionalLight.shadow.camera.bottom = -20;
+                directionalLight.shadow.mapSize.width = 2048;
+                directionalLight.shadow.mapSize.height = 2048;
+                this.scene.add(directionalLight);
+                
+                const pointLight = new THREE.PointLight(0xffcc99, 0.5, 50);
+                pointLight.position.set(-5, 10, 5);
+                this.scene.add(pointLight);
+                
+                // Crear entorno cozy
+                this.createCozyEnvironment();
+                
+                // Animación
+                this.animate();
+            }
+            
+            createCozyEnvironment() {
+                // Suelo de madera más oscuro
+                const floorGeometry = new THREE.PlaneGeometry(30, 30);
+                const floorMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x8b6f47,
+                    roughness: 0.8,
+                    metalness: 0.2
+                });
+                const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.y = -2;
+                floor.receiveShadow = true;
+                this.scene.add(floor);
+                
+                // Pared de fondo más clara
+                const wallGeometry = new THREE.PlaneGeometry(30, 25);
+                const wallMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xe8dcc4,
+                    roughness: 1
+                });
+                const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+                wall.position.set(0, 10, -10);
+                wall.receiveShadow = true;
+                this.scene.add(wall);
+                
+                // VENTANA con marco y vista
+                const windowFrame = this.createBox(4, 5, 0.2, 0x6b4423);
+                windowFrame.position.set(-4, 2, -9.8);
+                this.scene.add(windowFrame);
+                
+                const windowGlass = this.createBox(3.6, 4.6, 0.15, 0x87ceeb);
+                windowGlass.material.transparent = true;
+                windowGlass.material.opacity = 0.4;
+                windowGlass.material.metalness = 0.8;
+                windowGlass.position.set(-4, 2, -9.7);
+                this.scene.add(windowGlass);
+                
+                // Divisor de ventana (cruz)
+                const windowDivH = this.createBox(3.8, 0.1, 0.1, 0x6b4423);
+                windowDivH.position.set(-4, 2, -9.6);
+                this.scene.add(windowDivH);
+                
+                const windowDivV = this.createBox(0.1, 4.8, 0.1, 0x6b4423);
+                windowDivV.position.set(-4, 2, -9.6);
+                this.scene.add(windowDivV);
+                
+                // Sol visible por la ventana
+                const sunGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+                const sunMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xffd93d,
+                    emissive: 0xffd93d,
+                    emissiveIntensity: 1
+                });
+                const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+                sun.position.set(-5, 3.5, -9.5);
+                this.scene.add(sun);
+                
+                // CUADROS DE MICHIS en la pared
+                // Cuadro 1
+                const frame1 = this.createBox(1.5, 2, 0.1, 0x6b4423);
+                frame1.position.set(2, 3, -9.8);
+                this.scene.add(frame1);
+                
+                const picture1 = this.createBox(1.3, 1.8, 0.05, 0xff6b35);
+                picture1.position.set(2, 3, -9.7);
+                this.scene.add(picture1);
+                
+                // Mini gato en el cuadro
+                const miniCat1Head = this.createBox(0.4, 0.4, 0.05, 0xf4a261);
+                miniCat1Head.position.set(2, 3.3, -9.65);
+                this.scene.add(miniCat1Head);
+                
+                const miniCat1Body = this.createBox(0.5, 0.6, 0.05, 0xf4a261);
+                miniCat1Body.position.set(2, 2.7, -9.65);
+                this.scene.add(miniCat1Body);
+                
+                // Cuadro 2
+                const frame2 = this.createBox(1.8, 1.5, 0.1, 0x6b4423);
+                frame2.position.set(5, 4, -9.8);
+                this.scene.add(frame2);
+                
+                const picture2 = this.createBox(1.6, 1.3, 0.05, 0x2a9d8f);
+                picture2.position.set(5, 4, -9.7);
+                this.scene.add(picture2);
+                
+                // Mini gato dormido en el cuadro
+                const miniCat2 = this.createBox(0.7, 0.4, 0.05, 0xe76f51);
+                miniCat2.position.set(5, 4, -9.65);
+                miniCat2.rotation.z = 1.5;
+                this.scene.add(miniCat2);
+                
+                // Cuadro 3 (pequeño)
+                const frame3 = this.createBox(1, 1, 0.1, 0x6b4423);
+                frame3.position.set(7.5, 2.5, -9.8);
+                this.scene.add(frame3);
+                
+                const picture3 = this.createBox(0.8, 0.8, 0.05, 0x8338ec);
+                picture3.position.set(7.5, 2.5, -9.7);
+                this.scene.add(picture3);
+                
+                const miniCatFace = this.createBox(0.3, 0.3, 0.05, 0x06ffa5);
+                miniCatFace.position.set(7.5, 2.5, -9.65);
+                this.scene.add(miniCatFace);
+                
+                // Rascador de gatos 1 (sobre el suelo, no flotante)
+                const scratcherBase = this.createBox(1.2, 0.4, 1.2, 0x6b4423);
+                scratcherBase.position.set(-7, -1.8, -3);
+                this.scene.add(scratcherBase);
+                
+                const scratcherPost = this.createBox(0.5, 5, 0.5, 0x9b6b3d);
+                scratcherPost.position.set(-7, 0.7, -3);
+                this.scene.add(scratcherPost);
+                
+                const scratcherTop = this.createBox(1.4, 0.4, 1.4, 0x6b4423);
+                scratcherTop.position.set(-7, 3.1, -3);
+                this.scene.add(scratcherTop);
+                
+                // Almohadón (en el rascador)
+                const cushion = this.createBox(1, 0.2, 1, 0xd63447);
+                cushion.position.set(-7, 3.4, -3);
+                this.scene.add(cushion);
+                
+                // Rascador de gatos 2 (derecha) - sobre el suelo
+                const scratcherBase2 = this.createBox(1, 0.3, 1, 0x6b4423);
+                scratcherBase2.position.set(7, -1.85, -3);
+                this.scene.add(scratcherBase2);
+                
+                const scratcherPost2 = this.createBox(0.4, 3, 0.4, 0x9b6b3d);
+                scratcherPost2.position.set(7, -0.2, -3);
+                this.scene.add(scratcherPost2);
+                
+                const scratcherTop2 = this.createBox(1.2, 0.3, 1.2, 0x6b4423);
+                scratcherTop2.position.set(7, 1.35, -3);
+                this.scene.add(scratcherTop2);
+                
+                // Juguete en el rascador
+                const toy = this.createBox(0.3, 0.3, 0.3, 0xffd93d);
+                toy.position.set(7, 1.65, -3);
+                this.scene.add(toy);
+                
+                // Platito de comida (sobre el suelo)
+                const bowl = this.createBox(0.6, 0.2, 0.6, 0x3772ff);
+                bowl.position.set(-4.5, -1.9, 2);
+                this.scene.add(bowl);
+                
+                // Comidita
+                const food = this.createBox(0.4, 0.15, 0.4, 0xa0522d);
+                food.position.set(-4.5, -1.7, 2);
+                this.scene.add(food);
+                
+                // Platito de agua
+                const waterBowl = this.createBox(0.6, 0.2, 0.6, 0x06ffa5);
+                waterBowl.position.set(-3, -1.9, 2);
+                this.scene.add(waterBowl);
+                
+                // Casita de gato (sobre el suelo)
+                const houseBase = this.createBox(2, 1.5, 2, 0xbc4749);
+                houseBase.position.set(5, -1.25, 1);
+                this.scene.add(houseBase);
+                
+                // Entrada de la casita
+                const entrance = this.createBox(0.8, 1, 0.3, 0x2d3142);
+                entrance.position.set(5, -1.25, 2.15);
+                this.scene.add(entrance);
+                
+                // Techo de la casita
+                const roof = this.createBox(2.4, 0.3, 2.4, 0x8b2635);
+                roof.position.set(5, -0.35, 1);
+                this.scene.add(roof);
+                
+                // Alfombrita (sobre el suelo)
+                const rug = this.createBox(4, 0.05, 3, 0x9b4f96);
+                rug.position.set(0, -1.975, 3);
+                this.scene.add(rug);
+                
+                // Estante con juguetes en la pared
+                const shelf = this.createBox(3, 0.2, 0.5, 0x6b4423);
+                shelf.position.set(-7, 0.5, -9);
+                this.scene.add(shelf);
+                
+                // Juguetes en el estante
+                const ball1 = this.createBox(0.3, 0.3, 0.3, 0xff6b35);
+                ball1.position.set(-8, 0.75, -9);
+                this.scene.add(ball1);
+                
+                const ball2 = this.createBox(0.3, 0.3, 0.3, 0x06ffa5);
+                ball2.position.set(-7, 0.75, -9);
+                this.scene.add(ball2);
+                
+                const ball3 = this.createBox(0.3, 0.3, 0.3, 0x8338ec);
+                ball3.position.set(-6, 0.75, -9);
+                this.scene.add(ball3);
+            }
+            
+            createBox(width, height, depth, color) {
+                const geometry = new THREE.BoxGeometry(width, height, depth);
+                const material = new THREE.MeshStandardMaterial({ 
+                    color: color,
+                    roughness: 0.7,
+                    metalness: 0.1
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                return mesh;
+            }
+            
+            createCat(width, depth, color) {
+                const cat = new THREE.Group();
+                
+                // Cuerpo principal - UN SOLO RECTÁNGULO
+                const body = this.createBox(width, 1, depth, color);
+                body.position.y = 0;
+                cat.add(body);
+                
+                // Orejas triangulares encima del cuerpo
+                const earSize = Math.min(width, depth) * 0.25;
+                const earGeometry = new THREE.ConeGeometry(earSize, earSize * 1.2, 3);
+                const earMaterial = new THREE.MeshStandardMaterial({ 
+                    color: color,
+                    roughness: 0.6
+                });
+                
+                const earLeft = new THREE.Mesh(earGeometry, earMaterial);
+                earLeft.position.set(-width * 0.25, 0.6 + earSize * 0.6, depth * 0.3);
+                earLeft.rotation.z = -0.15;
+                earLeft.castShadow = true;
+                cat.add(earLeft);
+                
+                const earRight = new THREE.Mesh(earGeometry, earMaterial);
+                earRight.position.set(width * 0.25, 0.6 + earSize * 0.6, depth * 0.3);
+                earRight.rotation.z = 0.15;
+                earRight.castShadow = true;
+                cat.add(earRight);
+                
+                // Ojos grandes y expresivos (estilo kawaii)
+                const eyeGeometry = new THREE.CircleGeometry(0.12, 16);
+                const eyeMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x000000,
+                    roughness: 0.2
+                });
+                
+                const eyeLeft = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                eyeLeft.position.set(-width * 0.15, 0.15, depth * 0.51);
+                eyeLeft.rotation.y = 0;
+                cat.add(eyeLeft);
+                
+                const eyeRight = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                eyeRight.position.set(width * 0.15, 0.15, depth * 0.51);
+                eyeRight.rotation.y = 0;
+                cat.add(eyeRight);
+                
+                // Brillos en los ojos (kawaii style)
+                const shineGeometry = new THREE.CircleGeometry(0.04, 8);
+                const shineMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xffffff,
+                    emissive: 0xffffff,
+                    emissiveIntensity: 0.8
+                });
+                
+                const shineLeft = new THREE.Mesh(shineGeometry, shineMaterial);
+                shineLeft.position.set(-width * 0.13, 0.2, depth * 0.52);
+                shineLeft.rotation.y = 0;
+                cat.add(shineLeft);
+                
+                const shineRight = new THREE.Mesh(shineGeometry, shineMaterial);
+                shineRight.position.set(width * 0.17, 0.2, depth * 0.52);
+                shineRight.rotation.y = 0;
+                cat.add(shineRight);
+                
+                // Nariz pequeña y rosa
+                const noseGeometry = new THREE.CircleGeometry(0.05, 3);
+                const noseMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xff69b4,
+                    roughness: 0.4
+                });
+                const nose = new THREE.Mesh(noseGeometry, noseMaterial);
+                nose.position.set(0, -0.05, depth * 0.51);
+                nose.rotation.z = Math.PI;
+                cat.add(nose);
+                
+                // Boca simple (una línea en W)
+                const mouthMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x000000
+                });
+                
+                const mouthLeft = this.createBox(0.08, 0.02, 0.02, 0x000000);
+                mouthLeft.position.set(-0.05, -0.12, depth * 0.51);
+                mouthLeft.rotation.z = -0.4;
+                mouthLeft.material = mouthMaterial;
+                cat.add(mouthLeft);
+                
+                const mouthRight = this.createBox(0.08, 0.02, 0.02, 0x000000);
+                mouthRight.position.set(0.05, -0.12, depth * 0.51);
+                mouthRight.rotation.z = 0.4;
+                mouthRight.material = mouthMaterial;
+                cat.add(mouthRight);
+                
+                // Bigotes delgados y largos
+                const whiskerMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xffffff,
+                    roughness: 0.6
+                });
+                
+                // 3 bigotes por lado
+                for (let i = 0; i < 3; i++) {
+                    const yPos = 0.05 - i * 0.08;
+                    const angle = 0.3 - i * 0.1;
+                    
+                    // Bigotes izquierda
+                    const whiskerL = this.createBox(width * 0.45, 0.015, 0.015, 0xffffff);
+                    whiskerL.position.set(-width * 0.35, yPos, depth * 0.51);
+                    whiskerL.rotation.y = -angle;
+                    whiskerL.rotation.z = -0.1;
+                    whiskerL.material = whiskerMaterial;
+                    cat.add(whiskerL);
+                    
+                    // Bigotes derecha
+                    const whiskerR = this.createBox(width * 0.45, 0.015, 0.015, 0xffffff);
+                    whiskerR.position.set(width * 0.35, yPos, depth * 0.51);
+                    whiskerR.rotation.y = angle;
+                    whiskerR.rotation.z = 0.1;
+                    whiskerR.material = whiskerMaterial;
+                    cat.add(whiskerR);
+                }
+                
+                // Mejillas sonrojadas (opcional, estilo kawaii)
+                const blushGeometry = new THREE.CircleGeometry(0.1, 12);
+                const blushMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xff9999,
+                    transparent: true,
+                    opacity: 0.5,
+                    roughness: 1
+                });
+                
+                const blushLeft = new THREE.Mesh(blushGeometry, blushMaterial);
+                blushLeft.position.set(-width * 0.3, -0.05, depth * 0.51);
+                cat.add(blushLeft);
+                
+                const blushRight = new THREE.Mesh(blushGeometry, blushMaterial);
+                blushRight.position.set(width * 0.3, -0.05, depth * 0.51);
+                cat.add(blushRight);
+                
+                // Patitas pequeñas abajo
+                const pawSize = Math.min(width, depth) * 0.12;
+                const pawMaterial = new THREE.MeshStandardMaterial({ 
+                    color: color,
+                    roughness: 0.7
+                });
+                
+                const paw1 = this.createBox(pawSize, 0.25, pawSize, color);
+                paw1.position.set(-width * 0.28, -0.62, depth * 0.25);
+                paw1.material = pawMaterial;
+                cat.add(paw1);
+                
+                const paw2 = this.createBox(pawSize, 0.25, pawSize, color);
+                paw2.position.set(width * 0.28, -0.62, depth * 0.25);
+                paw2.material = pawMaterial;
+                cat.add(paw2);
+                
+                const paw3 = this.createBox(pawSize, 0.25, pawSize, color);
+                paw3.position.set(-width * 0.28, -0.62, -depth * 0.25);
+                paw3.material = pawMaterial;
+                cat.add(paw3);
+                
+                const paw4 = this.createBox(pawSize, 0.25, pawSize, color);
+                paw4.position.set(width * 0.28, -0.62, -depth * 0.25);
+                paw4.material = pawMaterial;
+                cat.add(paw4);
+                
+                // Cola curvada hacia arriba (más artística)
+                const tailMaterial = new THREE.MeshStandardMaterial({ 
+                    color: color,
+                    roughness: 0.7
+                });
+                
+                const tail1 = this.createBox(0.15, 0.15, depth * 0.25, color);
+                tail1.position.set(-width * 0.35, -0.15, -depth * 0.42);
+                tail1.rotation.x = 0.6;
+                tail1.rotation.z = 0.3;
+                tail1.material = tailMaterial;
+                cat.add(tail1);
+                
+                const tail2 = this.createBox(0.12, 0.12, depth * 0.2, color);
+                tail2.position.set(-width * 0.42, 0.05, -depth * 0.58);
+                tail2.rotation.x = 1.0;
+                tail2.rotation.z = 0.4;
+                tail2.material = tailMaterial;
+                cat.add(tail2);
+                
+                const tail3 = this.createBox(0.08, 0.08, depth * 0.12, color);
+                tail3.position.set(-width * 0.45, 0.25, -depth * 0.65);
+                tail3.rotation.x = 1.3;
+                tail3.rotation.z = 0.3;
+                tail3.material = tailMaterial;
+                cat.add(tail3);
+                
+                return cat;
+            }
+            
+            startGame() {
+                this.gameState = 'playing';
+                this.score = 0;
+                this.speed = 0.05;
+                this.direction = 1;
+                this.cameraTargetY = 10;
+                
+                // Limpiar escena - IMPORTANTE: remover todos los bloques correctamente
+                this.stack.forEach(block => {
+                    if (block.mesh && block.mesh.parent) {
+                        this.scene.remove(block.mesh);
+                    }
+                });
+                this.fallingBlocks.forEach(block => {
+                    if (block.mesh && block.mesh.parent) {
+                        this.scene.remove(block.mesh);
+                    }
+                });
+                if (this.currentBlock && this.currentBlock.mesh && this.currentBlock.mesh.parent) {
+                    this.scene.remove(this.currentBlock.mesh);
+                }
+                
+                this.stack = [];
+                this.fallingBlocks = [];
+                this.currentBlock = null;
+                
+                // Iniciar audio
+                if (!this.audioEngine.audioContext) {
+                    this.audioEngine.init();
+                }
+                this.audioEngine.startMusic();
+                
+                // Primer bloque (base)
+                const baseBlock = this.createCat(3, 3, this.catColors[0]);
+                baseBlock.position.set(0, 0, 0);
+                this.scene.add(baseBlock);
+                this.stack.push({
+                    mesh: baseBlock,
+                    width: 3,
+                    depth: 3,
+                    position: { x: 0, z: 0 }
+                });
+                
+                // Segundo bloque
+                this.spawnNewBlock();
+                
+                // UI
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('instructions').style.display = 'block';
+                
+                setTimeout(() => {
+                    document.getElementById('instructions').style.display = 'none';
+                }, 3000);
+            }
+            
+            spawnNewBlock() {
+                const lastBlock = this.stack[this.stack.length - 1];
+                const colorIndex = this.stack.length % this.catColors.length;
+                
+                const newBlock = this.createCat(
+                    lastBlock.width,
+                    lastBlock.depth,
+                    this.catColors[colorIndex]
+                );
+                
+                // Alternar dirección de movimiento
+                const axis = this.stack.length % 2 === 0 ? 'x' : 'z';
+                
+                // Posición Y debe ser 1 unidad más alta que el bloque anterior
+                const newY = lastBlock.mesh.position.y + 1;
+                
+                // Empezar en la posición del último bloque, pero desplazado en el eje de movimiento
+                newBlock.position.set(
+                    axis === 'x' ? -8 : lastBlock.position.x,
+                    newY,
+                    axis === 'z' ? -8 : lastBlock.position.z
+                );
+                
+                this.scene.add(newBlock);
+                this.currentBlock = {
+                    mesh: newBlock,
+                    width: lastBlock.width,
+                    depth: lastBlock.depth,
+                    axis: axis,
+                    direction: 1
+                };
+            }
+            
+            placeBlock() {
+                if (!this.currentBlock || this.gameState !== 'playing') return;
+                
+                const lastBlock = this.stack[this.stack.length - 1];
+                const currentMesh = this.currentBlock.mesh;
+                const axis = this.currentBlock.axis;
+                
+                const overlap = this.calculateOverlap(
+                    currentMesh.position[axis],
+                    lastBlock.position[axis],
+                    this.currentBlock[axis === 'x' ? 'width' : 'depth']
+                );
+                
+                if (overlap <= 0) {
+                    // Game Over
+                    this.gameOver();
+                    return;
+                }
+                
+                // Cortar el bloque
+                const cutSize = this.currentBlock[axis === 'x' ? 'width' : 'depth'] - overlap;
+                const direction = currentMesh.position[axis] > lastBlock.position[axis] ? 1 : -1;
+                
+                if (cutSize > 0.1) {
+                    // Crear parte que cae
+                    const colorIndex = this.stack.length % this.catColors.length;
+                    const fallingPiece = this.createCat(
+                        axis === 'x' ? cutSize : this.currentBlock.width,
+                        axis === 'z' ? cutSize : this.currentBlock.depth,
+                        this.catColors[colorIndex]
+                    );
+                    
+                    const fallingOffset = (overlap + cutSize) / 2 * direction;
+                    fallingPiece.position.set(
+                        axis === 'x' ? lastBlock.position.x + fallingOffset : currentMesh.position.x,
+                        currentMesh.position.y,
+                        axis === 'z' ? lastBlock.position.z + fallingOffset : currentMesh.position.z
+                    );
+                    
+                    this.scene.add(fallingPiece);
+                    this.fallingBlocks.push({
+                        mesh: fallingPiece,
+                        velocity: { x: direction * 0.05, y: 0, z: direction * 0.05 },
+                        rotation: { x: Math.random() * 0.1, y: Math.random() * 0.1, z: Math.random() * 0.1 }
+                    });
+                    
+                    // Sonido de corte
+                    this.audioEngine.playCutSound();
+                }
+                
+                // Ajustar bloque actual
+                const newSize = overlap;
+                const newPos = lastBlock.position[axis] + (cutSize / 2) * direction;
+                currentMesh.position[axis] = lastBlock.position[axis];
+                
+                // Actualizar tamaño del bloque
+                currentMesh.scale[axis] = overlap / this.currentBlock[axis === 'x' ? 'width' : 'depth'];
+                
+                // Agregar a la pila
+                this.stack.push({
+                    mesh: currentMesh,
+                    width: axis === 'x' ? newSize : this.currentBlock.width,
+                    depth: axis === 'z' ? newSize : this.currentBlock.depth,
+                    position: {
+                        x: currentMesh.position.x,
+                        z: currentMesh.position.z
+                    }
+                });
+                
+                this.score++;
+                document.getElementById('score').textContent = this.score;
+                
+                // Audio
+                const pitch = 1 + (this.score * 0.05);
+                this.audioEngine.playPlaceSound(Math.min(pitch, 2));
+                
+                // Aumentar dificultad
+                this.speed = Math.min(0.05 + this.score * 0.002, 0.15);
+                
+                // Mover cámara
+                this.cameraTargetY = 10 + this.currentBlock.mesh.position.y;
+                
+                this.currentBlock = null;
+                this.spawnNewBlock();
+            }
+            
+            calculateOverlap(pos1, pos2, size) {
+                const distance = Math.abs(pos1 - pos2);
+                return Math.max(0, size - distance);
+            }
+            
+            gameOver() {
+                this.gameState = 'gameOver';
+                this.audioEngine.stopMusic();
+                this.audioEngine.playGameOverSound();
+                
+                // Actualizar récord si es necesario
+                if (this.score > this.highScore) {
+                    this.highScore = this.score;
+                    localStorage.setItem('torredeMichisHighScore', this.highScore.toString());
+                }
+                
+                // Hacer caer el bloque actual
+                if (this.currentBlock) {
+                    const mesh = this.currentBlock.mesh;
+                    this.fallingBlocks.push({
+                        mesh: mesh,
+                        velocity: { 
+                            x: this.currentBlock.direction * 0.05, 
+                            y: 0, 
+                            z: this.currentBlock.direction * 0.05 
+                        },
+                        rotation: { x: 0.1, y: 0.1, z: 0.1 }
+                    });
+                    this.currentBlock = null;
+                }
+                
+                // Mostrar pantalla de game over
+                setTimeout(() => {
+                    document.getElementById('final-score').textContent = this.score;
+                    document.getElementById('high-score').textContent = this.highScore;
+                    
+                    // Mostrar mensaje especial si es nuevo récord
+                    const recordMessage = document.getElementById('record-message');
+                    if (this.score === this.highScore && this.score > 0) {
+                        recordMessage.style.display = 'block';
+                    } else {
+                        recordMessage.style.display = 'none';
+                    }
+                    
+                    document.getElementById('game-over-screen').style.display = 'flex';
+                }, 500);
+            }
+            
+            update() {
+                // Mover bloque actual
+                if (this.currentBlock && this.gameState === 'playing') {
+                    const axis = this.currentBlock.axis;
+                    this.currentBlock.mesh.position[axis] += this.speed * this.currentBlock.direction;
+                    
+                    if (Math.abs(this.currentBlock.mesh.position[axis]) > 8) {
+                        this.currentBlock.direction *= -1;
+                    }
+                }
+                
+                // Animar bloques cayendo
+                this.fallingBlocks = this.fallingBlocks.filter(block => {
+                    block.mesh.position.y -= 0.1;
+                    block.velocity.y -= 0.01;
+                    
+                    block.mesh.position.x += block.velocity.x;
+                    block.mesh.position.z += block.velocity.z;
+                    
+                    block.mesh.rotation.x += block.rotation.x;
+                    block.mesh.rotation.y += block.rotation.y;
+                    block.mesh.rotation.z += block.rotation.z;
+                    
+                    if (block.mesh.position.y < -10) {
+                        this.scene.remove(block.mesh);
+                        return false;
+                    }
+                    return true;
+                });
+                
+                // Mover cámara suavemente para seguir la torre
+                const targetY = this.cameraTargetY;
+                this.camera.position.y += (targetY - this.camera.position.y) * 0.1;
+                
+                // Actualizar el punto al que mira la cámara para que siga el centro de la torre
+                const lookAtY = this.stack.length > 0 ? this.stack[this.stack.length - 1].mesh.position.y : 0;
+                this.camera.lookAt(0, lookAtY, 0);
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                this.update();
+                this.renderer.render(this.scene, this.camera);
+            }
+            
+            setupEventListeners() {
+                // Botón de inicio
+                document.getElementById('start-btn').addEventListener('click', () => {
+                    document.getElementById('start-screen').style.display = 'none';
+                    this.startGame();
+                });
+                
+                // Botón de reinicio
+                document.getElementById('restart-btn').addEventListener('click', () => {
+                    document.getElementById('game-over-screen').style.display = 'none';
+                    this.startGame();
+                });
+                
+                // Botón de silenciar
+                document.getElementById('mute-btn').addEventListener('click', () => {
+                    this.toggleMute();
+                });
+                
+                // Input táctil y mouse
+                const handleInput = (e) => {
+                    e.preventDefault();
+                    if (this.gameState === 'playing') {
+                        this.placeBlock();
+                    }
+                };
+                
+                this.canvas.addEventListener('touchstart', handleInput, { passive: false });
+                this.canvas.addEventListener('mousedown', handleInput);
+                
+                // Redimensionar
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+            
+            toggleMute() {
+                this.isMuted = !this.isMuted;
+                const muteBtn = document.getElementById('mute-btn');
+                
+                if (this.isMuted) {
+                    // Silenciar
+                    this.audioEngine.masterGain.gain.value = 0;
+                    muteBtn.textContent = '🔇';
+                    muteBtn.title = 'Activar música';
+                } else {
+                    // Activar
+                    this.audioEngine.masterGain.gain.value = 0.3;
+                    muteBtn.textContent = '🔊';
+                    muteBtn.title = 'Silenciar música';
+                }
+            }
+        }
+        
+        // Iniciar juego
+        const game = new TorreDeMichis();
+    </script>
+</body>
+</html>
