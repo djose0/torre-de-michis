@@ -2,12 +2,13 @@
   "name": "Torre de Michis",
   "short_name": "Michis",
   "description": "Juego relajante de apilar gatitos. ¡Construye la torre más alta de michis!",
-  "start_url": "./torre-de-michis.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#87ceeb",
   "theme_color": "#ff8a65",
   "orientation": "portrait",
   "scope": "./",
+  "id": "/torre-de-michis/",
   "icons": [
     {
       "src": "icon-192.png",
@@ -22,12 +23,5 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["games", "entertainment"],
-  "screenshots": [
-    {
-      "src": "screenshot.png",
-      "sizes": "1080x1920",
-      "type": "image/png"
-    }
-  ]
+  "categories": ["games", "entertainment"]
 }

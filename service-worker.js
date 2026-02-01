@@ -1,6 +1,6 @@
 const CACHE_NAME = 'torre-de-michis-v1';
 const urlsToCache = [
-  './torre-de-michis.html',
+  './index.html',
   './manifest.json',
   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
   'https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Quicksand:wght@300;500&display=swap'
@@ -63,7 +63,7 @@ self.addEventListener('fetch', event => {
       })
       .catch(() => {
         // Si falla el fetch, intentar devolver la página principal desde cache
-        return caches.match('./torre-de-michis.html');
+        return caches.match('./index.html');
       })
   );
 });
