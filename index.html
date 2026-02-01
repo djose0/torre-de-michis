@@ -1146,13 +1146,16 @@
                     return true;
                 });
                 
-                // Mover cámara suavemente para seguir la torre
+                // Mover cámara suavemente para seguir la torre (interpolación más lenta = más suave)
                 const targetY = this.cameraTargetY;
-                this.camera.position.y += (targetY - this.camera.position.y) * 0.1;
+                this.camera.position.y += (targetY - this.camera.position.y) * 0.03; // Reducido de 0.1 a 0.03
                 
-                // Actualizar el punto al que mira la cámara para que siga el centro de la torre
+                // Actualizar el punto al que mira la cámara para que siga el centro de la torre (también más suave)
                 const lookAtY = this.stack.length > 0 ? this.stack[this.stack.length - 1].mesh.position.y : 0;
-                this.camera.lookAt(0, lookAtY, 0);
+                const currentLookAtY = this.camera.userData.currentLookAtY || 0;
+                const newLookAtY = currentLookAtY + (lookAtY - currentLookAtY) * 0.03; // Interpolación suave
+                this.camera.userData.currentLookAtY = newLookAtY;
+                this.camera.lookAt(0, newLookAtY, 0);
             }
             
             animate() {
